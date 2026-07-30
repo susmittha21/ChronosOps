@@ -1,0 +1,31 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+.venv/
+venv/
+backend/.venv/
+
+# Environment variables
+.env
+backend/.env
+
+# SQLite database generated locally
+backend/data/*.db
+*.db
+
+# VS Code
+.vscode/
+
+# Testing and logs
+.pytest_cache/
+*.log
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Frontend generated files
+node_modules/
+dist/
