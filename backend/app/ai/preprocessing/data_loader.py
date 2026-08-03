@@ -8,7 +8,7 @@ import pandas as pd
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[3]
-DATA_PATH = BASE_DIR / "data" / "synthetic_incidents_250.csv"
+DATA_PATH = BASE_DIR / "data" / "synthetic_incidents.csv"
 
 
 class DataLoader:
