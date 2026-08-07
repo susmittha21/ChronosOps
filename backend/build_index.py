@@ -2,7 +2,7 @@
 Run this once to create the FAISS index.
 """
 
-from app.ai.retrieval.retrieval_service import retrieval_service
+from backend.app.ai.retrieval.retrieval_service import retrieval_service
 
 print("Building FAISS Index...")
 

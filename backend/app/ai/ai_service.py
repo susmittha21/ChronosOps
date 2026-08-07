@@ -11,9 +11,9 @@ Responsibilities
 4. Save resolved incidents into memory
 """
 
-from app.ai.retrieval.retrieval_service import retrieval_service
-from app.ai.llm.llm_service import llm_service
-from app.ai.memory.memory_service import memory_service
+from backend.app.ai.retrieval.retrieval_service import retrieval_service
+from backend.app.ai.llm.llm_service import llm_service
+from backend.app.ai.memory.memory_service import memory_service
 
 
 class AIService:

@@ -5,8 +5,15 @@ const jsonHeaders = {
   Accept: 'application/json',
 }
 
+function buildRequestUrl(path) {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  const baseUrl = API_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://127.0.0.1:8000')
+  const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`
+  return new URL(normalizedPath, normalizedBase)
+}
+
 export async function fetchJson(path, options = {}) {
-  const url = new URL(path, API_BASE_URL)
+  const url = buildRequestUrl(path)
 
   const response = await fetch(url.toString(), {
     headers: { ...jsonHeaders, ...(options.headers || {}) },

@@ -14,9 +14,9 @@ Responsibilities
 
 from datetime import datetime
 
-from app.ai.preprocessing.text_builder import text_builder
-from app.ai.embedding.embedding_service import embedding_service
-from app.ai.retrieval.vector_store import vector_store
+from backend.app.ai.preprocessing.text_builder import text_builder
+from backend.app.ai.embedding.embedding_service import embedding_service
+from backend.app.ai.retrieval.vector_store import vector_store
 
 
 class MemoryService:

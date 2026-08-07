@@ -6,9 +6,13 @@ LLM Service (Google GenAI SDK)
 import os
 
 from dotenv import load_dotenv
-from google import genai
 
-from app.ai.llm.prompts import SYSTEM_PROMPT
+try:
+    from google import genai
+except Exception:  # pragma: no cover - optional dependency
+    genai = None
+
+from backend.app.ai.llm.prompts import SYSTEM_PROMPT
 
 load_dotenv()
 
@@ -17,12 +21,15 @@ class LLMService:
 
     def __init__(self):
 
+        self.client = None
+
+        if genai is None:
+            return
+
         api_key = os.getenv("GEMINI_API_KEY")
 
         if not api_key:
-            raise ValueError(
-                "GEMINI_API_KEY not found in .env"
-            )
+            return
 
         self.client = genai.Client(
             api_key=api_key
@@ -126,6 +133,9 @@ Do NOT mention that you are an AI.
             current_incident,
             similar_incidents
         )
+
+        if self.client is None:
+            return "AI analysis is unavailable because the optional Gemini SDK is not configured."
 
         response = self.client.models.generate_content(
             model="gemini-3.5-flash",

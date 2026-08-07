@@ -13,10 +13,14 @@ Responsibilities
 """
 
 import os
-import faiss
 import numpy as np
 
 from pathlib import Path
+
+try:
+    import faiss
+except Exception:  # pragma: no cover - optional dependency
+    faiss = None
 
 
 class VectorStore:
@@ -25,9 +29,10 @@ class VectorStore:
 
         self.dimension = dimension
 
-        self.index = faiss.IndexFlatIP(dimension)
+        self.index = faiss.IndexFlatIP(dimension) if faiss is not None else None
 
         self.incident_ids = []
+        self._vectors = []
 
     ##########################################################
 
@@ -35,7 +40,12 @@ class VectorStore:
 
         vector = np.asarray(vector).astype("float32")
 
-        faiss.normalize_L2(vector.reshape(1, -1))
+        if faiss is not None:
+            faiss.normalize_L2(vector.reshape(1, -1))
+        else:
+            norm = np.linalg.norm(vector)
+            if norm:
+                vector = vector / norm
 
         return vector
 
@@ -49,9 +59,12 @@ class VectorStore:
 
         embedding = self.normalize(embedding)
 
-        self.index.add(
-            embedding.reshape(1, -1)
-        )
+        if self.index is not None:
+            self.index.add(
+                embedding.reshape(1, -1)
+            )
+        else:
+            self._vectors.append(embedding.reshape(-1))
 
         self.incident_ids.append(incident_id)
 
@@ -68,9 +81,11 @@ class VectorStore:
             dtype="float32"
         )
 
-        faiss.normalize_L2(vectors)
-
-        self.index.add(vectors)
+        if faiss is not None:
+            faiss.normalize_L2(vectors)
+            self.index.add(vectors)
+        else:
+            self._vectors.extend([vector.reshape(-1) for vector in vectors])
 
         self.incident_ids.extend(incident_ids)
 
@@ -84,25 +99,43 @@ class VectorStore:
 
         embedding = self.normalize(embedding)
 
-        scores, indices = self.index.search(
-            embedding.reshape(1, -1),
-            top_k
-        )
-
         results = []
 
-        for score, idx in zip(scores[0], indices[0]):
+        if self.index is not None:
+            scores, indices = self.index.search(
+                embedding.reshape(1, -1),
+                top_k
+            )
 
-            if idx == -1:
-                continue
+            for score, idx in zip(scores[0], indices[0]):
 
+                if idx == -1:
+                    continue
+
+                results.append(
+                    {
+                        "incident_id":
+                            self.incident_ids[idx],
+
+                        "similarity":
+                            round(float(score), 4)
+                    }
+                )
+
+            return results
+
+        if not self._vectors:
+            return results
+
+        stored_vectors = np.vstack(self._vectors)
+        similarity_scores = np.dot(stored_vectors, embedding.reshape(-1))
+        top_indices = np.argsort(similarity_scores)[::-1][:top_k]
+
+        for idx in top_indices:
             results.append(
                 {
-                    "incident_id":
-                        self.incident_ids[idx],
-
-                    "similarity":
-                        round(float(score), 4)
+                    "incident_id": self.incident_ids[int(idx)],
+                    "similarity": round(float(similarity_scores[int(idx)]), 4),
                 }
             )
 
@@ -119,15 +152,22 @@ class VectorStore:
             exist_ok=True
         )
 
-        faiss.write_index(
-            self.index,
-            str(folder / "incidents.index")
-        )
+        if self.index is not None:
+            faiss.write_index(
+                self.index,
+                str(folder / "incidents.index")
+            )
 
         np.save(
             folder / "incident_ids.npy",
             np.array(self.incident_ids)
         )
+
+        if self.index is None:
+            np.save(
+                folder / "incident_embeddings.npy",
+                np.array(self._vectors, dtype="float32")
+            )
 
     ##########################################################
 
@@ -145,18 +185,28 @@ class VectorStore:
                 "FAISS index not found."
             )
 
-        self.index = faiss.read_index(
-            str(index_file)
-        )
+        if faiss is not None and index_file.exists():
+            self.index = faiss.read_index(
+                str(index_file)
+            )
+        else:
+            self.index = None
 
         self.incident_ids = np.load(
             ids_file,
             allow_pickle=True
         ).tolist()
 
+        embeddings_file = folder / "incident_embeddings.npy"
+        if self.index is None and embeddings_file.exists():
+            self._vectors = np.load(embeddings_file, allow_pickle=True).tolist()
+
     ##########################################################
 
     def total_vectors(self):
+
+        if self.index is None:
+            return len(self._vectors)
 
         return self.index.ntotal
 

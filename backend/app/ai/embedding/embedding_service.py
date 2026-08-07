@@ -10,9 +10,20 @@ Responsible for:
 
 from typing import List
 import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
 
-from .model_loader import embedding_model
+try:
+    from sklearn.metrics.pairwise import cosine_similarity
+except Exception:  # pragma: no cover - optional dependency
+    def cosine_similarity(embedding1, embedding2):
+        a = np.asarray(embedding1, dtype="float32")
+        b = np.asarray(embedding2, dtype="float32")
+        a_norm = np.linalg.norm(a)
+        b_norm = np.linalg.norm(b)
+        if a_norm == 0 or b_norm == 0:
+            return 0.0
+        return float(np.dot(a, b) / (a_norm * b_norm))
+
+from backend.app.ai.embedding.model_loader import embedding_model
 
 
 class EmbeddingService:
@@ -35,10 +46,16 @@ class EmbeddingService:
             numpy array (384 dimensions)
         """
 
-        embedding = self.model.encode(
-            text,
-            convert_to_numpy=True
-        )
+        if self.model is None:
+            return np.zeros(384, dtype="float32")
+
+        try:
+            embedding = self.model.encode(
+                text,
+                convert_to_numpy=True
+            )
+        except Exception:
+            embedding = np.zeros(384, dtype="float32")
 
         return embedding
 
@@ -55,10 +72,16 @@ class EmbeddingService:
             List of embeddings
         """
 
-        embeddings = self.model.encode(
-            texts,
-            convert_to_numpy=True
-        )
+        if self.model is None:
+            return [np.zeros(384, dtype="float32") for _ in texts]
+
+        try:
+            embeddings = self.model.encode(
+                texts,
+                convert_to_numpy=True
+            )
+        except Exception:
+            embeddings = [np.zeros(384, dtype="float32") for _ in texts]
 
         return embeddings
 
