@@ -2,10 +2,5 @@ fastapi
 uvicorn
 sqlalchemy
 pydantic
-sentence-transformers
-faiss-cpu
-pandas
+pydantic-settings
 python-dotenv
-requests
-numpy
-google-generativeai

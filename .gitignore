@@ -28,4 +28,5 @@ Thumbs.db
 
 # Frontend generated files
 node_modules/
-dist/
+dist/"__pycache__/" 
+"backend/data/chronosops.db" 
