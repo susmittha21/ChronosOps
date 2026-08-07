@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import Sidebar from '../components/layout/Sidebar.jsx'
 import Topbar from '../components/layout/Topbar.jsx'
 import StatCard from '../components/ui/StatCard.jsx'
@@ -8,21 +9,55 @@ import IncidentTable from '../components/dashboard/IncidentTable.jsx'
 import ChartPlaceholder from '../components/dashboard/ChartPlaceholder.jsx'
 import QuickActionCard from '../components/dashboard/QuickActionCard.jsx'
 import NotificationsPanel from '../components/dashboard/NotificationsPanel.jsx'
-
-const incidentData = [
-  { id: 'INC-1052', title: 'Payment API database connection failure', service: 'Payment API', severity: 'Critical', status: 'Investigating', date: '20 May 2026' },
-  { id: 'INC-1047', title: 'Redis memory spike', service: 'Redis Cache', severity: 'High', status: 'Resolved', date: '19 May 2026' },
-  { id: 'INC-1050', title: 'SSL certificate warning', service: 'Authentication', severity: 'Medium', status: 'Resolved', date: '18 May 2026' },
-]
+import { getDashboardData, getIncidents } from '../services/incidentService.js'
 
 const healthData = [
-  { service: 'Payment API', status: 'Critical', responseTime: '4,200 ms' },
+  { service: 'Payment API', status: 'Healthy', responseTime: '120 ms' },
   { service: 'Authentication', status: 'Healthy', responseTime: '170 ms' },
-  { service: 'PostgreSQL', status: 'Warning', responseTime: '890 ms' },
+  { service: 'PostgreSQL', status: 'Healthy', responseTime: '89 ms' },
   { service: 'Redis Cache', status: 'Healthy', responseTime: '38 ms' },
 ]
 
 function Dashboard() {
+  const [dashboardMetrics, setDashboardMetrics] = useState({
+    total_incidents: 0,
+    active_incidents: 0,
+    resolved_incidents: 0,
+    pending_memory_review: 0,
+    knowledge_records: 0,
+    average_mttr_minutes: 0,
+  })
+  const [incidentsList, setIncidentsList] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [dashData, incData] = await Promise.all([
+          getDashboardData(),
+          getIncidents(),
+        ])
+        if (dashData) setDashboardMetrics(dashData)
+        if (Array.isArray(incData)) {
+          const formatted = incData.map((inc) => ({
+            id: inc.id,
+            title: inc.title,
+            service: inc.service,
+            severity: inc.severity,
+            status: inc.status,
+            date: inc.created_at ? new Date(inc.created_at).toLocaleDateString() : 'Today',
+          }))
+          setIncidentsList(formatted)
+        }
+      } catch (err) {
+        console.error('Failed to load dashboard data from backend:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <div className="lg:flex">
@@ -32,10 +67,10 @@ function Dashboard() {
           <main className="space-y-6 p-4 lg:p-8">
             <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
-                <StatCard title="Active incidents" value="2" delta="1 from yesterday" icon="⚠️" />
-                <StatCard title="Average MTTR" value="18 min" delta="4 min from yesterday" icon="⏱️" />
-                <StatCard title="Resolved memory" value="14" delta="3 from yesterday" icon="🧠" />
-                <StatCard title="Knowledge records" value="52" delta="5 from yesterday" icon="📚" />
+                <StatCard title="Active incidents" value={String(dashboardMetrics.active_incidents)} delta="Real-time count" icon="⚠️" />
+                <StatCard title="Average MTTR" value={`${dashboardMetrics.average_mttr_minutes || 0} min`} delta="System average" icon="⏱️" />
+                <StatCard title="Resolved memory" value={String(dashboardMetrics.resolved_incidents)} delta="Persisted incidents" icon="🧠" />
+                <StatCard title="Knowledge records" value={String(dashboardMetrics.knowledge_records)} delta="Knowledge entries" icon="📚" />
               </div>
 
               <NotificationsPanel />
@@ -44,8 +79,8 @@ function Dashboard() {
             <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
               <div className="space-y-6">
                 <div className="grid gap-6 xl:grid-cols-2">
-                  <SummaryCard label="Active incidents" value="2" status="healthy" />
-                  <SummaryCard label="Open critical issues" value="1" status="critical" />
+                  <SummaryCard label="Active incidents" value={String(dashboardMetrics.active_incidents)} status={dashboardMetrics.active_incidents > 0 ? "critical" : "healthy"} />
+                  <SummaryCard label="Total incidents" value={String(dashboardMetrics.total_incidents)} status="healthy" />
                 </div>
 
                 <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-sm">
@@ -77,7 +112,11 @@ function Dashboard() {
                     View all
                   </button>
                 </div>
-                <IncidentTable incidents={incidentData} />
+                {loading ? (
+                  <p className="text-sm text-slate-400">Loading incidents...</p>
+                ) : (
+                  <IncidentTable incidents={incidentsList} />
+                )}
               </div>
 
               <div className="space-y-6">
@@ -86,20 +125,20 @@ function Dashboard() {
                   <SectionHeader title="Incident summary" subtitle="Key metrics" />
                   <div className="mt-6 grid gap-4 text-sm text-slate-300 sm:grid-cols-2">
                     <div className="rounded-3xl bg-slate-950 p-4">
-                      <p className="font-medium text-white">Top service</p>
-                      <p className="mt-2">Payment API</p>
+                      <p className="font-medium text-white">Total tracked</p>
+                      <p className="mt-2">{dashboardMetrics.total_incidents}</p>
                     </div>
                     <div className="rounded-3xl bg-slate-950 p-4">
-                      <p className="font-medium text-white">Likely root cause</p>
-                      <p className="mt-2">Database connection exhaustion</p>
+                      <p className="font-medium text-white">Pending memory review</p>
+                      <p className="mt-2">{dashboardMetrics.pending_memory_review}</p>
                     </div>
                     <div className="rounded-3xl bg-slate-950 p-4">
-                      <p className="font-medium text-white">Confidence</p>
-                      <p className="mt-2">91%</p>
+                      <p className="font-medium text-white">Knowledge records</p>
+                      <p className="mt-2">{dashboardMetrics.knowledge_records}</p>
                     </div>
                     <div className="rounded-3xl bg-slate-950 p-4">
-                      <p className="font-medium text-white">Resolved using memory</p>
-                      <p className="mt-2">Yes</p>
+                      <p className="font-medium text-white">Avg MTTR</p>
+                      <p className="mt-2">{dashboardMetrics.average_mttr_minutes} min</p>
                     </div>
                   </div>
                 </div>

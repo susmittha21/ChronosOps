@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Any
 from pydantic import BaseModel, Field
 
 
@@ -10,8 +10,10 @@ class AnalysisRequest(BaseModel):
 
 class AnalysisResponse(BaseModel):
     incident_id: int
-    status: Literal["pending", "placeholder"]
     status: str
     message: str
+    analysis: str | None = None
+    similar_incidents: list[dict[str, Any]] | None = None
     recommended_next_steps: list[str]
-    metadata: dict[str, str] | None = None
+    metadata: dict[str, Any] | None = None
+

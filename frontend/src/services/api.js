@@ -6,10 +6,13 @@ const jsonHeaders = {
 }
 
 function buildRequestUrl(path) {
+  let baseUrl = API_BASE_URL || 'http://127.0.0.1:8000/api/v1'
+  if (!baseUrl.includes('/api/v1') && !path.startsWith('/api/v1')) {
+    baseUrl = `${baseUrl.replace(/\/+$/, '')}/api/v1`
+  }
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
-  const baseUrl = API_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://127.0.0.1:8000')
   const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`
-  return new URL(normalizedPath, normalizedBase)
+  return new URL(normalizedPath.replace(/^\/api\/v1\/?/, ''), normalizedBase)
 }
 
 export async function fetchJson(path, options = {}) {

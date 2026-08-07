@@ -62,18 +62,29 @@ class RetrievalService:
 
     def retrieve_similar_incidents(
         self,
-        title,
-        service,
-        severity,
-        category,
-        symptoms,
-        error_message,
+        title_or_dict,
+        service=None,
+        severity=None,
+        category=None,
+        symptoms=None,
+        error_message=None,
         top_k=3
     ):
 
         """
         Returns the top similar incidents.
         """
+
+        if isinstance(title_or_dict, dict):
+            d = title_or_dict
+            title = d.get("title", "")
+            service = d.get("service", "")
+            severity = d.get("severity", "")
+            category = d.get("category", "")
+            symptoms = d.get("symptoms", "") or d.get("description", "")
+            error_message = d.get("error_message", "")
+        else:
+            title = title_or_dict
 
         query = text_builder.build_query_text(
             title,

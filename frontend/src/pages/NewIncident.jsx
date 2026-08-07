@@ -5,6 +5,7 @@ import FormField from '../components/forms/FormField.jsx'
 import TextInput from '../components/forms/TextInput.jsx'
 import SelectInput from '../components/forms/SelectInput.jsx'
 import TextAreaInput from '../components/forms/TextAreaInput.jsx'
+import { createIncident } from '../services/incidentService.js'
 
 const serviceOptions = [
   { value: '', label: 'Select a service' },
@@ -16,18 +17,18 @@ const serviceOptions = [
 
 const categoryOptions = [
   { value: '', label: 'Select a category' },
-  { value: 'performance', label: 'Performance' },
-  { value: 'availability', label: 'Availability' },
-  { value: 'security', label: 'Security' },
-  { value: 'data', label: 'Data' },
+  { value: 'Performance', label: 'Performance' },
+  { value: 'Availability', label: 'Availability' },
+  { value: 'Security', label: 'Security' },
+  { value: 'Data', label: 'Data' },
 ]
 
 const severityOptions = [
   { value: '', label: 'Select a severity' },
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'critical', label: 'Critical' },
+  { value: 'LOW', label: 'Low' },
+  { value: 'MEDIUM', label: 'Medium' },
+  { value: 'HIGH', label: 'High' },
+  { value: 'CRITICAL', label: 'Critical' },
 ]
 
 function NewIncident() {
@@ -40,7 +41,8 @@ function NewIncident() {
   })
 
   const [errors, setErrors] = useState({})
-  const [submitted, setSubmitted] = useState(false)
+  const [submitted, setSubmitted] = useState(null)
+  const [loading, setLoading] = useState(false)
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -51,27 +53,48 @@ function NewIncident() {
   const validate = () => {
     const nextErrors = {}
 
-    if (!formData.title.trim()) nextErrors.title = 'Title is required.'
+    if (!formData.title.trim() || formData.title.trim().length < 3) nextErrors.title = 'Title must be at least 3 characters.'
     if (!formData.service) nextErrors.service = 'Please select a service.'
     if (!formData.category) nextErrors.category = 'Please select a category.'
     if (!formData.severity) nextErrors.severity = 'Please select a severity.'
-    if (!formData.description.trim()) nextErrors.description = 'Description is required.'
+    if (!formData.description.trim() || formData.description.trim().length < 5) nextErrors.description = 'Description must be at least 5 characters.'
 
     return nextErrors
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
     const nextErrors = validate()
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
-      setSubmitted(false)
+      setSubmitted(null)
       return
     }
 
     setErrors({})
-    setSubmitted(true)
+    setLoading(true)
+    try {
+      const response = await createIncident({
+        title: formData.title.trim(),
+        service: formData.service,
+        category: formData.category,
+        severity: formData.severity,
+        description: formData.description.trim(),
+      })
+      setSubmitted(response)
+      setFormData({
+        title: '',
+        service: '',
+        category: '',
+        severity: '',
+        description: '',
+      })
+    } catch (err) {
+      setErrors({ api: err.message || 'Failed to submit incident to backend.' })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -87,6 +110,12 @@ function NewIncident() {
                 <h1 className="text-2xl font-semibold text-white">Create a new incident report</h1>
                 <p className="text-sm text-slate-400">Capture the issue details clearly so the response team can triage fast.</p>
               </div>
+
+              {errors.api && (
+                <div className="mb-6 rounded-2xl bg-rose-500/10 border border-rose-500/20 p-4 text-sm text-rose-400">
+                  {errors.api}
+                </div>
+              )}
 
               <form className="space-y-6" onSubmit={handleSubmit} noValidate>
                 <div className="grid gap-6 lg:grid-cols-2">
@@ -127,12 +156,15 @@ function NewIncident() {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <button
                     type="submit"
-                    className="inline-flex items-center justify-center rounded-3xl bg-indigo-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400"
+                    disabled={loading}
+                    className="inline-flex items-center justify-center rounded-3xl bg-indigo-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:opacity-50"
                   >
-                    Submit incident
+                    {loading ? 'Submitting...' : 'Submit incident'}
                   </button>
                   {submitted ? (
-                    <p className="text-sm text-emerald-400">Incident draft submitted successfully.</p>
+                    <p className="text-sm text-emerald-400">
+                      Incident #{submitted.id} ("{submitted.title}") created successfully!
+                    </p>
                   ) : null}
                 </div>
               </form>
