@@ -5,3 +5,4 @@ __all__ = [
     "Incident",
     "KnowledgeRecord",
 ]
+# backend.app.models package

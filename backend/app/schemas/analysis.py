@@ -11,6 +11,7 @@ class AnalysisRequest(BaseModel):
 class AnalysisResponse(BaseModel):
     incident_id: int
     status: Literal["pending", "placeholder"]
+    status: str
     message: str
     recommended_next_steps: list[str]
     metadata: dict[str, str] | None = None
