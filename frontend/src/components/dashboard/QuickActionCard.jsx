@@ -4,7 +4,6 @@ function QuickActionCard() {
   const actions = [
     { label: 'Analyse New Incident', variant: 'primary' },
     { label: 'View Knowledge Memory', variant: 'secondary' },
-    { label: 'Create Runbook', variant: 'secondary' },
   ]
 
   return (

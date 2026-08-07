@@ -6,8 +6,6 @@ const navItems = [
   { label: 'New Incident', path: '/new', icon: '✚' },
   { label: 'Knowledge Memory', path: '/knowledge', icon: '🧠' },
   { label: 'Analytics', path: '/analytics', icon: '📈' },
-  { label: 'Runbooks', path: '/runbooks', icon: '📚' },
-  { label: 'Settings', path: '/settings', icon: '⚙️' },
 ]
 
 function Sidebar() {
