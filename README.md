@@ -478,8 +478,8 @@ The login page includes an **Auto-fill** button. Use the following credentials:
 | Name | Role | Responsibilities |
 |------|------|-----------------|
 | **Susmittha** | Backend & Project Lead | FastAPI REST API design, SQLAlchemy models, Pydantic schemas, business logic services, SQLite database design, project architecture and coordination |
+| **Abinayaa V** | AI & Retrieval Module | Sentence Transformer embeddings, FAISS vector store management, RAG retrieval pipeline, Gemini 2.0 Flash LLM integration, institutional memory service |
 | **Atchaya Devi PV** | Frontend Development | React component library, Tailwind CSS UI design, page layouts (Dashboard, Analysis, Knowledge, Analytics, Simulation), client-side routing, API integration, responsive design |
-| **Abinaya V** | AI & Retrieval Module | Sentence Transformer embeddings, FAISS vector store management, RAG retrieval pipeline, Gemini 2.0 Flash LLM integration, institutional memory service |
 
 ---
 
