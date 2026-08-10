@@ -4,3 +4,9 @@ sqlalchemy
 pydantic
 pydantic-settings
 python-dotenv
+google-genai
+sentence-transformers
+faiss-cpu
+numpy
+pandas
+scikit-learn

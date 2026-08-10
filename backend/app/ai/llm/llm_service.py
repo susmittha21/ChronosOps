@@ -138,7 +138,7 @@ Do NOT mention that you are an AI.
             return "AI analysis is unavailable because the optional Gemini SDK is not configured."
 
         response = self.client.models.generate_content(
-            model="gemini-3.5-flash",
+            model="gemini-2.0-flash",
             contents=prompt
         )
 

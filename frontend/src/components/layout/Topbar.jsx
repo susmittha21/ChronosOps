@@ -1,6 +1,23 @@
+import { useNavigate } from 'react-router-dom'
 import { BellIcon, SparklesIcon } from '../ui/Icons.jsx'
 
 function Topbar() {
+  const navigate = useNavigate()
+
+  const user = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('chronosops_user') || '{}')
+    } catch {
+      return {}
+    }
+  })()
+
+  const handleLogout = () => {
+    localStorage.removeItem('chronosops_auth')
+    localStorage.removeItem('chronosops_user')
+    navigate('/login')
+  }
+
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 bg-slate-950 px-4 py-4 lg:px-8">
       <div>
@@ -26,6 +43,30 @@ function Topbar() {
           <BellIcon className="h-5 w-5" />
           Notifications
         </button>
+
+        {/* User avatar + logout */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 rounded-3xl border border-slate-800 bg-slate-900 px-3 py-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white">
+              {user.name ? user.name[0] : 'A'}
+            </div>
+            <div className="hidden sm:block">
+              <p className="text-xs font-semibold text-white leading-none">{user.name || 'Admin'}</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">{user.role || 'SRE Lead'}</p>
+            </div>
+          </div>
+          <button
+            id="topbar-logout"
+            type="button"
+            onClick={handleLogout}
+            title="Sign out"
+            className="flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
+        </div>
       </div>
     </header>
   )

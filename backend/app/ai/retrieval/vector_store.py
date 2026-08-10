@@ -17,6 +17,10 @@ import numpy as np
 
 from pathlib import Path
 
+# Absolute path to the project-root faiss_index directory.
+# Resolves to <project_root>/faiss_index regardless of the working directory.
+_FAISS_INDEX_DIR = Path(__file__).resolve().parents[4] / "faiss_index"
+
 try:
     import faiss
 except Exception:  # pragma: no cover - optional dependency
@@ -143,9 +147,9 @@ class VectorStore:
 
     ##########################################################
 
-    def save(self, folder="faiss_index"):
+    def save(self, folder=None):
 
-        folder = Path(folder)
+        folder = Path(folder) if folder is not None else _FAISS_INDEX_DIR
 
         folder.mkdir(
             parents=True,
@@ -171,9 +175,9 @@ class VectorStore:
 
     ##########################################################
 
-    def load(self, folder="faiss_index"):
+    def load(self, folder=None):
 
-        folder = Path(folder)
+        folder = Path(folder) if folder is not None else _FAISS_INDEX_DIR
 
         index_file = folder / "incidents.index"
 
