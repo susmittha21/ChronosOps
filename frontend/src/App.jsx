@@ -19,6 +19,7 @@ function App() {
         <Route path="/knowledge" element={<KnowledgeMemory />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/simulation" element={<Simulation />} />
+        <Route path="/incidents" element={<Incidents />} />
       </Routes>
     </BrowserRouter>
   )
